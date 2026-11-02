@@ -1,0 +1,1 @@
+# -mindustry-fair-attack-ai
