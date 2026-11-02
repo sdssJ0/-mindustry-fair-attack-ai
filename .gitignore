@@ -1,0 +1,13 @@
+build/
+.tools/
+.reference/
+test-output/
+__pycache__/
+cache/
+*.pyc
+*.log
+.env
+.env.*
+*.pem
+*.key
+.upload/

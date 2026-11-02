@@ -1,0 +1,5 @@
+Source: https://github.com/holmes-g/schematics
+Author: holmes-g
+Revision: 9d44f5fe0e71bb419ca0dca41c96acef9a0beb00
+Schematics: CC BY-SA 4.0. Original files are unmodified. Runtime layout adaptations are derived from these schematics, with attribution retained in the AI status.
+License: https://creativecommons.org/licenses/by-sa/4.0/

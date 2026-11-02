@@ -1,0 +1,173 @@
+{
+  "version": "0.3.1",
+  "jarSha256": "a0ab6e3ef1753caf09f914e02e2cd8d3e976d9b0844cffe67dfed2cad1a21d64",
+  "checks": 173,
+  "sourceAndDistributedClassesMatchBenchmark": true,
+  "scenarios": [
+    {
+      "scenario": "flat",
+      "miningSeconds": 0.0,
+      "defenses": [
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 49,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 84,
+          "y": 57,
+          "automated": true,
+          "ammo": 28
+        },
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 52,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 87,
+          "y": 56,
+          "automated": true,
+          "ammo": 28
+        }
+      ],
+      "units": {
+        "dagger": 7,
+        "flare": 6
+      }
+    },
+    {
+      "scenario": "choke",
+      "miningSeconds": 0.0,
+      "defenses": [
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 49,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 85,
+          "y": 56,
+          "automated": true,
+          "ammo": 28
+        },
+        {
+          "block": "duo",
+          "x": 82,
+          "y": 50,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 85,
+          "y": 60,
+          "automated": true,
+          "ammo": 28
+        }
+      ],
+      "units": {
+        "dagger": 8,
+        "flare": 8
+      }
+    },
+    {
+      "scenario": "lake",
+      "miningSeconds": 0.0,
+      "defenses": [
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 49,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 84,
+          "y": 57,
+          "automated": true,
+          "ammo": 28
+        },
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 51,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 87,
+          "y": 56,
+          "automated": true,
+          "ammo": 28
+        }
+      ],
+      "units": {
+        "dagger": 8,
+        "flare": 8
+      }
+    },
+    {
+      "scenario": "attrition",
+      "miningSeconds": 0.0,
+      "defenses": [
+        {
+          "block": "duo",
+          "x": 79,
+          "y": 49,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 84,
+          "y": 57,
+          "automated": true,
+          "ammo": 28
+        },
+        {
+          "block": "duo",
+          "x": 81,
+          "y": 55,
+          "automated": true,
+          "ammo": 30
+        },
+        {
+          "block": "scatter",
+          "x": 87,
+          "y": 56,
+          "automated": true,
+          "ammo": 28
+        }
+      ],
+      "units": {
+        "dagger": 3,
+        "flare": 3
+      }
+    }
+  ],
+  "sourceSha256": {
+    "src/fairai/BlueprintLibrary.java": "7f232482ac2a5df4c05e460b0f0c8673c68d3c5d4fe8fbf5455c215ca29b835f",
+    "src/fairai/BotPlayer.java": "245c55fdb925d86e4d84f3c4da1d63ebec210ff7a9f6dd1965bf566c82881b41",
+    "src/fairai/Construction.java": "c0fda8eff23f5e2973823df49e5bb38ff2d12fe4809fe8a6411e815873b8621a",
+    "src/fairai/DefenseLogistics.java": "502a6813196102ab53bb9ce7a9e561f592ccaf3e31275742a91ca4dff3a1ae24",
+    "src/fairai/EconomyMonitor.java": "87870518b5d1fcad56ffd8022e800ea716f81a2d411032bdc86a34a4139b56b0",
+    "src/fairai/EconomyPlanner.java": "dd06c73ad41d480fd6b01aabc6d742fde4b35829590b1c2c03901bd59d1e0b0e",
+    "src/fairai/FairAiMod.java": "706eab544302877bb6a81b6489b27d3ec386c1ba448ae8520b81f004c06a6975",
+    "src/fairai/RawLogistics.java": "5a589d3704b074920397ceaad9bfc104386de3035fc5710c7665798d49b2596a",
+    "src/fairai/TeamBrain.java": "36d060ffd4025091724974d09f0f5e262c4f44a7319e56811d88dbf7907eb29b",
+    "src/fairai/WorldView.java": "f41a309fea150242edaf94c8232bab071c0dae37920e8e59de422fc77c7fc9ed"
+  },
+  "runDirectory": "test-output/benchmark/v0.3.1-automation-release"
+}

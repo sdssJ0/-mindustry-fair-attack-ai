@@ -1,0 +1,172 @@
+[
+  {
+    "file": "graphite-press-6-mechanical-drill-23.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/graphite-press-6-mechanical-drill-23.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/graphite-press-6-mechanical-drill-23.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "c957c4f960dc65a0a9f4d2dbceb75aa0a2cfeca7cae44c04bcb21780cfda25d8"
+  },
+  {
+    "file": "graphite-press-7-pneumatic-drill-18.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/graphite-press-7-pneumatic-drill-18.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/graphite-press-7-pneumatic-drill-18.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "510cec1f03a9979a68e1a19c5519ed1ccadeb92ed9ddd0949eaf10ee08a3df0c"
+  },
+  {
+    "file": "kiln-5-pneumatic-drill-17-sand.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/kiln-5-pneumatic-drill-17-sand.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/kiln-5-pneumatic-drill-17-sand.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "b86c9fb3ea64859d31194c1141fc157f0b641d527158e6482aa93e6ddc467738"
+  },
+  {
+    "file": "kiln-6-core.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/kiln-6-core.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/kiln-6-core.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "c9df8f77c635edc81915d695df7716c0dd2c8832a79c8bda0076790a01e3ea31"
+  },
+  {
+    "file": "silicon-smelter-7-pneumatic-drill-35.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/silicon-smelter-7-pneumatic-drill-35.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/silicon-smelter-7-pneumatic-drill-35.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "11e64eea29b50e23e5b1e3528a463e551e8c4516ada5859bf02ee870d453516d"
+  },
+  {
+    "file": "silicon-smelter-7-pneumatic-drill-14-boosted.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/silicon-smelter-7-pneumatic-drill-14-boosted.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/silicon-smelter-7-pneumatic-drill-14-boosted.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "d6cf9d7a3ba637492b2103cce53a88039ced31bcde2f1f0da96790351ab1759a"
+  },
+  {
+    "file": "phase-weaver-6-core.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/phase-weaver-6-core.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/phase-weaver-6-core.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "2734ad99d73bad3545b4e51a3c47cde633a3c352c20d226fb4cf5892513dd2b4"
+  },
+  {
+    "file": "surge-smelter-3-core.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/crafting/surge-smelter-3-core.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/crafting/surge-smelter-3-core.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "c05c1dabf5346b3ad5eb7862ef29374fb810992259d8f4e572bcc2d9ed322355"
+  },
+  {
+    "file": "thorium-reactor-5-water-extractor.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/power/thorium-reactor-5-water-extractor.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/power/thorium-reactor-5-water-extractor.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "fa18df6adadac29a55475a96d36d2a9f6eefec9a4f691c66ad915b42b6c76fe8"
+  },
+  {
+    "file": "airblast-drill-6-double.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/production/airblast-drill-6-double.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/production/airblast-drill-6-double.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "6cfc432150bc4088065ac63903e972a1dbd682089dfd900153b6437568803573"
+  },
+  {
+    "file": "airblast-drill-2-mass-driver.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/production/airblast-drill-2-mass-driver.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/production/airblast-drill-2-mass-driver.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "de34824a590174865b40135f27704175d6d3608e4b10ce3be08962c1b3df8058"
+  },
+  {
+    "file": "scatter-4-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/turret/scatter-4-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/turret/scatter-4-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "c4f7367ff76c74ffda6513a0b4742755a8428982886278a323a3d3bf365c7be7"
+  },
+  {
+    "file": "salvo-4-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/turret/salvo-4-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/turret/salvo-4-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "ffd9a1d78bac44c56a3f888e76e0f1f8d8cbf0f316495ffa3cdfc537302218f4"
+  },
+  {
+    "file": "cyclone-3-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/turret/cyclone-3-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/turret/cyclone-3-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "ac3459671782af6a5cbc380601e02d9765885dfde12a20b7161afebf7f3d3c60"
+  },
+  {
+    "file": "swarmer-4-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/turret/swarmer-4-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/turret/swarmer-4-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "4ad6ae9d6fe938157aae3b256da3bf787a21f9a4af88533a83075a4db65bbf69"
+  },
+  {
+    "file": "foreshadow-3-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/turret/foreshadow-3-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/turret/foreshadow-3-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "59f595b41c0abdca2bbae48de9ffbfe5c98d99c1d9745898d1c8faa4e8420f8f"
+  },
+  {
+    "file": "multiplicative-reconstructor-2-wireless.msch",
+    "author": "holmes-g",
+    "repository": "holmes-g/schematics",
+    "revision": "9d44f5fe0e71bb419ca0dca41c96acef9a0beb00",
+    "path": "Serpulo/units/multiplicative-reconstructor-2-wireless.msch",
+    "url": "https://github.com/holmes-g/schematics/blob/9d44f5fe0e71bb419ca0dca41c96acef9a0beb00/Serpulo/units/multiplicative-reconstructor-2-wireless.msch",
+    "license": "CC-BY-SA-4.0",
+    "sha256": "23170ebb6dc0b53331ef243f7a6e92b5aba04c2043b706b8decdefdab500583e"
+  }
+]
