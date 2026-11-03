@@ -34,11 +34,16 @@ public final class SimulationTest{
             activationScopeAndRules();
             fogDoesNotRevealEnemy();
             productionBeforeConsumption();
+            SchedulerTest.run();
             haulingUsesProductionAndReserves();
             RawLogisticsTest.run();
+            BridgeTest.run();
             EconomyPlanningTest.run();
+            PowerRoutesTest.run();
             AutomationTest.run();
             DevelopmentTest.run();
+            UtilitiesTest.run();
+            TertiaryTest.run();
             routeAndTransport(0);
             routeAndTransport(1);
             routeAndTransport(2);
@@ -62,7 +67,7 @@ public final class SimulationTest{
         Core.audio = new MockAudio();
         Core.input = new MockInput();
         Core.settings = new MockSettings();
-        Core.settings.setDataDirectory(new Fi("test-output/data"));
+        Core.settings.setDataDirectory(new Fi(System.getProperty("fairai.testData","test-output/data")));
         Core.bundle = I18NBundle.createEmptyBundle();
         Vars.headless = true;
         Vars.loadLocales = false;
@@ -259,6 +264,7 @@ public final class SimulationTest{
         //Export independent fixtures, before autonomous play, for manual testing.
         map(kind);
         Vars.state.rules.canGameOver = true;
+        Vars.state.rules.loadout=ItemStack.list(Items.copper,250,Items.lead,150);
         Vars.state.rules.tags.put(FairAiMod.enabledTag, "true");
         Team.sharded.core().items.set(Items.copper, 250);
         Team.sharded.core().items.set(Items.lead, 150);
@@ -266,7 +272,11 @@ public final class SimulationTest{
         Team.crux.core().items.set(Items.lead, 150);
         Vars.state.map.tags.put("name", new String[]{"公平 AI - 平原", "公平 AI - 隘口", "公平 AI - 湖岸"}[kind]);
         Vars.state.map.tags.put("rules", JsonIO.write(Vars.state.rules));
-        MapIO.writeMap(new Fi("build/test-maps/fair-ai-" + kind + ".msav"), Vars.state.map);
+        Fi exported=new Fi("build/test-maps/fair-ai-"+kind+".msav");MapIO.writeMap(exported,Vars.state.map);
+        Map playable=MapIO.createMap(exported,false);Vars.world.loadMap(playable,playable.rules());Vars.logic.play();
+        check(Team.crux.core().items.get(Items.copper)==250 && Team.crux.core().items.get(Items.lead)==150 &&
+            Team.sharded.core().items.get(Items.copper)==250 && Team.sharded.core().items.get(Items.lead)==150,
+            "Exported map "+kind+" starts both teams with the documented finite copper and lead through actual custom-game loading");
     }
 
     static void productionBeforeConsumption(){
@@ -412,6 +422,8 @@ public final class SimulationTest{
                 }
             }
             System.out.println("Supply diagnostic: graphite=" + brain.hasProduction(Items.graphite) + " silicon=" + brain.hasProduction(Items.silicon) + " coal=" + brain.hasProduction(Items.coal) + " sand=" + brain.hasProduction(Items.sand));
+            System.out.println("MODEL "+brain.economy.describe());
+            SaveIO.write(new Fi("test-output/autonomous-"+kind+".msav"));
             System.out.println("Treasury diagnostic: " + brain.core().items + " air site=" + brain.construction.site(Blocks.airFactory, brain.core(), 0, 0, false));
         }
         check(brain.finishedProjects >= 3, "Map " + kind + " autonomous AI builds multiple projects");

@@ -33,6 +33,8 @@ public final class TeamBrain{
     public final DefenseLogistics defense;
     public final DevelopmentPlanner development;
     public final RetirementPlanner retirement;
+    public final UtilitiesPlanner utilities;
+    public final ProcessLogistics processes;
     public final Seq<BuildPlan> project = new Seq<>();
     public String status = "等待核心机体重生";
     public int finishedProjects;
@@ -43,7 +45,8 @@ public final class TeamBrain{
     private final ObjectIntMap<Item> demands = new ObjectIntMap<>();
     private final ObjectSet<Item> supplyStack = new ObjectSet<>();
     private final IntSet failedSites = new IntSet();
-    private float clock, nextThink, nextVision, nextCommand, lastProgress, nextTransfer;
+    private final IntFloatMap nextProductRoute=new IntFloatMap();
+    private float clock, nextThink, nextVision, nextCommand, lastProgress, nextTransfer,nextSupplyJob;
     private int progressSignature;
     private Item mineItem;
     private Tile mineTile;
@@ -55,6 +58,7 @@ public final class TeamBrain{
     private int supplyCursor;
     private float clearFailedAt = 1800f;
     public float emergencyMiningTicks;
+    private final arc.func.Cons<EventType.UnitCreateEvent> created;
 
     public TeamBrain(Team team){
         this(team, null);
@@ -70,6 +74,10 @@ public final class TeamBrain{
         this.defense = new DefenseLogistics(this);
         this.development = new DevelopmentPlanner(this);
         this.retirement = new RetirementPlanner(this);
+        this.utilities = new UtilitiesPlanner(this);
+        this.processes = new ProcessLogistics(this);
+        created=development::created;
+        arc.Events.on(EventType.UnitCreateEvent.class,created);
         actor = new BotPlayer();
         actor.name = "公平 AI · " + team.name;
         actor.team(team);
@@ -86,6 +94,7 @@ public final class TeamBrain{
     }
 
     public void dispose(){
+        arc.Events.remove(EventType.UnitCreateEvent.class,created);
         actor.remove();
     }
 
@@ -101,6 +110,7 @@ public final class TeamBrain{
         }
         if(clock >= nextVision){ view.refresh(); nextVision = clock + 30f; }
         development.update(clock);
+        utilities.update(clock);
         development.control();
         if(actor.dead()) return; //Player.update supplies the same normal deathDelay and core spawn.
         Unit unit = actor.unit();
@@ -113,6 +123,7 @@ public final class TeamBrain{
             plan();
             economy.refresh(clock);
             economy.control();
+            utilities.control();
             development.control();
             nextThink = clock + 120f;
         }
@@ -131,6 +142,7 @@ public final class TeamBrain{
         for(Item item : new Item[]{Items.copper, Items.lead, Items.coal, Items.sand}){
             if(ensureSupply(item, 0) == Supply.working) return;
         }
+        utilities.reserveFuelSpace();
         if(repairMiningReturns()) return;
         //Repair missing upstream production before topping up existing consumers.
         if(prepareInputs()) return;
@@ -138,12 +150,23 @@ public final class TeamBrain{
         if(defense.plan()) return;
         //Reserve working local defense before later mining belts occupy every edge of small ore patches.
         if(defense.ready() && view.count(Blocks.duo) == 0 && build(Blocks.duo, true)) return;
-        if(defense.ready() && view.count(Blocks.scatter) == 0 && build(Blocks.scatter, true)) return;
+        if(defense.ready() && view.count(Blocks.scatter) == 0){
+            //An optional new defense must not wait ahead of affordable baseline mining.
+            //Keep ordinary production dependency waits intact.
+            if(!core().items.has(Blocks.scatter.requirements,Vars.state.rules.buildCostMultiplier) && expandCoreMining()) return;
+            if(build(Blocks.scatter,true))return;
+        }
+        if(development.savingT3()){
+            if(utilities.repairing() && utilities.plan())return;
+            if(development.plan())return;
+            status="T3 建设储备：等待已投产产线回库，暂缓可选扩张";return;
+        }
         if(expandCoreMining()) return;
         if(productReturns()) return;
         if(economy.joinIndustrialGrid()) return;
         if(repairPower()) return;
         if(economy.improve()) return;
+        if(processes.plan()) return;
         if(raw.plan()) return;
         if(threatNearCore() && defense.ready()){
             Block turret = hasAirThreat() ? Blocks.scatter : Blocks.duo;
@@ -159,6 +182,7 @@ public final class TeamBrain{
         if(defense.ready() && view.count(Blocks.scatter) < 2 && build(Blocks.scatter, true)) return;
         if(view.count(Blocks.groundFactory) == 0 && build(Blocks.groundFactory, false)) return;
 
+        if(utilities.plan()) return;
         if(development.plan()) return;
         if(retirement.plan(clock)) return;
         if(rebuildDestroyed()) return;
@@ -224,6 +248,8 @@ public final class TeamBrain{
             if(defense.assigned(producer)) continue;
             if(crafter.outputItems == null || Structs.contains(crafter.outputItems, s -> RawLogistics.processingInput(s.item))) continue;
             if(construction.feeds(producer, core())) continue;
+            if(clock<nextProductRoute.get(producer.pos(),0))continue;
+            nextProductRoute.put(producer.pos(),clock+600f);
             Seq<BuildPlan> route = construction.supplyRoute(producer, core());
             if(route != null && route.any() && submit(route, "成品自动入库：" + producer.block.localizedName)){
                 construction.recordFlow(route, construction.outputItem(producer)); return true;
@@ -299,7 +325,7 @@ public final class TeamBrain{
             ItemStack[] stacks = consume instanceof ConsumeItems ? ((ConsumeItems)consume).items :
                 consume instanceof ConsumeItemDynamic && building != null ? ((ConsumeItemDynamic)consume).items.get(building) : null;
             if(stacks != null) for(ItemStack input : stacks) if(!result.contains(input.item, true)) result.add(input.item);
-            if(consume instanceof ConsumeItemFilter && block == Blocks.combustionGenerator) result.add(Items.coal);
+            if(consume instanceof ConsumeItemFilter && (block == Blocks.combustionGenerator || block == Blocks.steamGenerator) && !result.contains(Items.coal,true)) result.add(Items.coal);
         }
         if(block instanceof UnitFactory && building == null){
             UnitFactory factory = (UnitFactory)block;
@@ -484,6 +510,7 @@ public final class TeamBrain{
         if(block instanceof ItemTurret && (defense.ammo((ItemTurret)block) == Items.copper || defense.ammo((ItemTurret)block) == Items.lead)){
             return buildDefense((ItemTurret)block);
         }
+        if(block==Blocks.kiln)return processes.buildKiln();
         if(blueprints != null){
             BlueprintLibrary.Placement selected = blueprints.choose(block, this);
             if(block instanceof GenericCrafter) selected = blueprints.nearInput(selected,raw.site(block),block,this);
@@ -555,6 +582,8 @@ public final class TeamBrain{
         Block drill = item.hardness <= 2 ? Blocks.mechanicalDrill : item.hardness <= 3 ? Blocks.pneumaticDrill : Blocks.laserDrill;
         if(item.hardness <= 2 && core().items.get(Items.graphite) >= 12 &&
             core().items.has(Blocks.pneumaticDrill.requirements, Vars.state.rules.buildCostMultiplier)) drill = Blocks.pneumaticDrill;
+        if(local && toward!=null && !defense.assigned(toward) && !(toward.block instanceof ItemTurret) && item==Items.titanium &&
+            utilities.commissioned()>=2 && core().items.has(Blocks.laserDrill.requirements,Vars.state.rules.buildCostMultiplier)) drill=Blocks.laserDrill;
         if(!construction.allowed(drill)) return false;
         final Drill chosen = (Drill)drill;
         Seq<Tile> candidates = new Seq<>();
@@ -584,9 +613,18 @@ public final class TeamBrain{
             if(mixed) continue;
             BuildPlan mine = new BuildPlan(tile.x, tile.y, 0, drill);
             Seq<BuildPlan> route = RawLogistics.processingInput(item) || local ? Seq.with(mine) : construction.drillRoute(mine, core());
-            if(route == null) continue;
+            if(toward!=null && (RawLogistics.processingInput(item) || local)){
+                Building proposed=construction.proposed(drill,tile.x,tile.y);
+                ((Drill.DrillBuild)proposed).dominantItem=item;
+                route=construction.branchRoute(proposed,toward);
+                if(route!=null)route.add(mine);
+            }
+            if(route == null){failedSites.add(tile.pos());continue;}
             if(submit(route, "开采 " + item.localizedName + (RawLogistics.processingInput(item) ? "，保留原料供加工" : " 并铺设运输线"))){
-                if(local && toward != null) defense.reserve(tile.pos(), toward);
+                if(local && toward != null){
+                    if(toward.block instanceof ItemTurret || defense.assigned(toward)) defense.reserve(tile.pos(), toward);
+                    else processes.assign(tile.pos(),toward);
+                }
                 construction.recordFlow(route, item); return true;
             }
             int missing = 0;
@@ -606,7 +644,7 @@ public final class TeamBrain{
 
     /** Working paid mining lines replace the core ship, even when stock is temporarily low. */
     boolean hasCoreIncome(Item item){
-        return view.buildings.contains(b -> b.enabled && construction.outputItem(b) == item && construction.feeds(b, core()));
+        return view.buildings.contains(b -> (b.enabled || economy.stockPaused(b)) && construction.outputItem(b) == item && construction.feeds(b, core()));
     }
 
     private boolean emergencyMine(Item item, int amount){
@@ -625,6 +663,7 @@ public final class TeamBrain{
         for(Building b : view.buildings){
             if(!(b instanceof Drill.DrillBuild) || defense.assigned(b) &&
                 !"true".equals(WorldMarks.get("fair-ai.core-mine."+team.id+"."+b.pos()))) continue;
+            if(processes.assigned(b)) continue;
             Item item = construction.outputItem(b);
             if(item == null || RawLogistics.processingInput(item) || construction.feeds(b, core())) continue;
             //A newly placed ammunition mine must be connected to its turret first.
@@ -727,6 +766,7 @@ public final class TeamBrain{
             int index = (supplyCursor + offset) % view.buildings.size;
             Building b = view.buildings.get(index);
             if(b.items == null || b instanceof CoreBuild || b.items.get(item) < 5) continue;
+            if(construction.outputItem(b)!=item)continue;
             if(construction.feeds(b, core())) continue;
             if(defense.assigned(b) || defense.needs(item) && !construction.feeds(b, core())) continue;
             boolean output = b.block instanceof Drill;
@@ -774,6 +814,8 @@ public final class TeamBrain{
             Building b = view.buildings.get(index);
             if(b.items == null || b instanceof CoreBuild) continue;
             if(development.owns(b)) continue;
+            if(utilities.owns(b)) continue;
+            if(processes.manages(b)) continue;
             if(b.block instanceof ItemTurret) continue; //Normal ammunition is entirely automated.
             if(!economy.manages(b)) continue;
             if(b instanceof UnitFactoryBuild){
@@ -893,6 +935,8 @@ public final class TeamBrain{
         }
         while(project.any() && Construction.complete(project.first())){
             BuildPlan done = project.remove(0);
+            String owned="fair-ai.owned."+team.id+"."+arc.math.geom.Point2.pack(done.x,done.y);
+            if(!done.breaking && WorldMarks.get(owned)!=null)WorldMarks.put(owned,done.block.name);
             if(done.config != null && done.tile().build != null) done.tile().build.configure(done.config);
             if(project.isEmpty()){ finishedProjects++; view.refresh(); nextThink = clock; }
         }
@@ -929,9 +973,12 @@ public final class TeamBrain{
             if(unit.within(mineTile, unit.type.mineRange)){ unit.mineTile = mineTile; emergencyMiningTicks += arc.util.Time.delta; }
             return;
         }
-        if(supplyInputs()) return;
-        for(Item item : new Item[]{Items.silicon, Items.graphite, Items.metaglass, Items.titanium, Items.copper, Items.lead}){
-            if(core().items.get(item) < Math.max(100, demands.get(item, 0)) && collectOutput(item)) return;
+        if(clock>=nextSupplyJob){
+            nextSupplyJob=clock+30f;
+            if(supplyInputs()) return;
+            for(Item item : new Item[]{Items.silicon, Items.graphite, Items.metaglass, Items.titanium, Items.copper, Items.lead}){
+                if(core().items.get(item) < Math.max(100, demands.get(item, 0)) && collectOutput(item)) return;
+            }
         }
         mineTile = null;
         if(Vars.state.rules.fog){
@@ -949,6 +996,7 @@ public final class TeamBrain{
     }
 
     private void cancelProject(BuildPlan plan){
+        if(Boolean.getBoolean("fairai.trace"))System.out.println("CANCEL t="+clock/60f+" job="+status+" plan="+plan+" actual="+(plan.tile()==null ? null:plan.tile().block())+" lastProgress="+(clock-lastProgress)/60f);
         for(BuildPlan pending : project) if(pending.breaking && pending.tile()!=null && !(pending.tile().build instanceof ConstructBuild)){
             WorldMarks.remove("fair-ai.retired."+team.id+"."+arc.math.geom.Point2.pack(pending.x,pending.y));
         }
@@ -986,13 +1034,16 @@ public final class TeamBrain{
             FairCommand command = (FairCommand)unit.controller();
             if(target != null && (defend || sortie)){
                 if(unit.healthf() < 0.25f) command.commandPosition(new arc.math.geom.Vec2(core().x, core().y));
-                else command.commandTarget(target);
+                else if(command.attackTarget!=target) command.commandTarget(target);
             }else if(sortie){
                 //No enemy knowledge under fog: scout towards successive sectors.
-                float angle = exploreIndex++ * 137.5f;
-                command.commandPosition(new arc.math.geom.Vec2(
-                    Mathf.clamp(core().x + Angles.trnsx(angle, 500f), 24f, Vars.world.unitWidth() - 24f),
-                    Mathf.clamp(core().y + Angles.trnsy(angle, 500f), 24f, Vars.world.unitHeight() - 24f)));
+                if(command.targetPos==null || unit.within(command.targetPos,20f) || clock-command.scoutSince>=1800f){
+                    float angle = exploreIndex++ * 137.5f;
+                    command.commandPosition(new arc.math.geom.Vec2(
+                        Mathf.clamp(core().x + Angles.trnsx(angle, 500f), 24f, Vars.world.unitWidth() - 24f),
+                        Mathf.clamp(core().y + Angles.trnsy(angle, 500f), 24f, Vars.world.unitHeight() - 24f)));
+                    command.scoutSince=clock;
+                }
             }else command.commandPosition(new arc.math.geom.Vec2(core().x + 80f, core().y));
         }
     }
@@ -1005,6 +1056,7 @@ public final class TeamBrain{
     /** Overrides vanilla's AI-full-vision targeting with the AI's own visible observations. */
     static final class FairCommand extends CommandAI{
         final WorldView view;
+        float scoutSince;
         FairCommand(WorldView view){ this.view = view; }
         @Override public Teamc findTarget(float x, float y, float range, boolean air, boolean ground){
             Teamc best = null;

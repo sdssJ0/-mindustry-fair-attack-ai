@@ -99,6 +99,7 @@ public final class EconomyMonitor{
             text.append(brain.economy.describe()).append('\n');
             text.append(brain.development.describe()).append('\n');
             text.append(brain.retirement.describe()).append('\n');
+            text.append(brain.utilities.describe()).append('\n');
             text.append("[accent]炮塔实际弹仓[]（内部弹药单位，含原版弹药倍率）\n");
             int turrets = 0;
             for(Building build : brain.team.data().buildings){

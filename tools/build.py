@@ -2,6 +2,7 @@
 from pathlib import Path
 import os
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -55,18 +56,24 @@ def main():
             if file.is_file():
                 archive.write(file, file.relative_to(ROOT / 'assets').as_posix())
     print('Built:', output)
-    if '--test' in sys.argv or '--automation-test' in sys.argv or '--development-test' in sys.argv:
+    if any(flag in sys.argv for flag in ['--test','--automation-test','--development-test','--utilities-test','--t3-test','--bridge-test']):
         tests = ROOT / 'build/tests'
         compile_sources(sorted((ROOT / 'test').rglob('*.java')), tests, [classes])
-        runtime = GAME / 'jre/bin/java.exe'
+        runtime = Path(sys.argv[sys.argv.index('--runtime')+1]) if '--runtime' in sys.argv else GAME / 'jre/bin/java.exe'
         result = subprocess.run([str(runtime), '-Dfile.encoding=UTF-8', '-ea', '-cp',
                                  ';'.join(os.path.relpath(p, ROOT) for p in [GAME_JAR, classes, tests]),
+                                 'fairai.BridgeTest' if '--bridge-test' in sys.argv else
+                                 'fairai.UtilitiesTest' if '--utilities-test' in sys.argv else
+                                 'fairai.TertiaryTest' if '--t3-test' in sys.argv else
                                  'fairai.DevelopmentTest' if '--development-test' in sys.argv else
                                  'fairai.AutomationTest' if '--automation-test' in sys.argv else 'fairai.SimulationTest',
                                  *(['processed'] if '--processed-ammo' in sys.argv else [])], cwd=ROOT, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, text=True, encoding='utf-8')
-        logname='development-verification.log' if '--development-test' in sys.argv else 'automation-verification.log' if '--automation-test' in sys.argv else 'verification.log'
+                                stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
+        logname='bridge-verification.log' if '--bridge-test' in sys.argv else 'utilities-verification.log' if '--utilities-test' in sys.argv else 't3-verification.log' if '--t3-test' in sys.argv else 'development-verification.log' if '--development-test' in sys.argv else 'automation-verification.log' if '--automation-test' in sys.argv else 'verification.log'
         (ROOT / 'build' / logname).write_text(result.stdout, encoding='utf-8')
+        version=subprocess.run([str(runtime),'-version'],capture_output=True,text=True,encoding='utf-8',errors='replace',check=True)
+        (ROOT/'build'/logname.replace('.log','-runtime.json')).write_text(json.dumps({'runtime':str(runtime.resolve()),'runtimeVersion':version.stdout+version.stderr,
+            'gameJarSha256':hashlib.sha256(GAME_JAR.read_bytes()).hexdigest(),'exitCode':result.returncode},indent=2),encoding='utf-8')
         print(result.stdout, end='')
         if result.returncode:
             raise SystemExit(result.returncode)

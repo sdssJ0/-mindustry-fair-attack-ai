@@ -65,7 +65,18 @@ final class DevelopmentTest{
     }
     static int total(Item item){
         ObjectSet<mindustry.world.modules.ItemModule> seen=new ObjectSet<>(); int result=0;
-        for(Building b:Team.crux.data().buildings) if(b.items!=null && seen.add(b.items)) result+=b.items.get(item);
+        for(Building b:Team.crux.data().buildings){
+            if(b.items!=null && seen.add(b.items)) result+=b.items.get(item);
+            if(b instanceof mindustry.world.blocks.distribution.BufferedItemBridge.BufferedItemBridgeBuild)try{
+                java.lang.reflect.Field field=b.getClass().getDeclaredField("buffer");field.setAccessible(true);
+                mindustry.world.ItemBuffer buffer=(mindustry.world.ItemBuffer)field.get(b);
+                java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
+                buffer.write(new arc.util.io.Writes(new java.io.DataOutputStream(bytes)));
+                java.io.DataInputStream data=new java.io.DataInputStream(new java.io.ByteArrayInputStream(bytes.toByteArray()));
+                int count=data.readUnsignedByte();data.readUnsignedByte();
+                for(int n=0;n<count;n++)if(mindustry.gen.TimeItem.item(data.readLong())==item.id)result++;
+            }catch(Exception failure){throw new RuntimeException("Cannot audit vanilla in-flight bridge inventory",failure);}
+        }
         return result;
     }
     static void automatedT2AndRetirement(){

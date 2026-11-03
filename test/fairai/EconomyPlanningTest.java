@@ -24,6 +24,30 @@ final class EconomyPlanningTest{
         factoriesCannotPolluteExistingLines();
         streamPolicySurvivesSaving();
         unsupportedIndustryKeepsItsControls();
+        stockBackpressure();
+    }
+    static void stockBackpressure(){
+        map(0);new FairAiMod().applyFairRules();
+        Team.crux.core().items.set(Items.copper,2500);Team.crux.core().items.set(Items.lead,2500);
+        Vars.world.tile(77,49).setBlock(Blocks.pneumaticDrill,Team.crux);
+        Vars.world.tile(70,70).setBlock(Blocks.container,Team.crux);
+        Vars.world.build(70,70).items.set(Items.copper,250); //Isolated fixture stock cannot pay for construction at the core.
+        TeamBrain brain=new TeamBrain(Team.crux);frames(null,120);
+        Building mine=Vars.world.build(77,49);
+        Seq<BuildPlan> route=brain.construction.miningReturn(mine,brain.core());
+        check(route!=null && brain.submit(route,"fixture paid stock-controlled mine"),"Stock control starts from a normally paid and physically connected mine");
+        brain.construction.recordFlow(route,Items.copper);
+        for(int i=0;i<12000 && brain.project.any();i++)frame(brain);
+        for(int i=0;i<3600;i++){frame(null);brain.development.ledger.update(brain.view.buildings,brain.time()+i);}
+        brain.economy.refresh(brain.time()+3600);brain.economy.control();
+        check(!mine.enabled && brain.economy.stockPaused(mine) && brain.hasCoreIncome(Items.copper),
+            "Sufficient stock and transport buffers pause a core-only mine while preserving its status as an automatic income source");
+        brain.core().items.set(Items.copper,0); //Independent fixture transition represents other paid spending.
+        brain.economy.refresh(brain.time()+3601);brain.economy.control();
+        check(mine.enabled,"A depleted spendable core reserve re-enables mining even when an isolated container still holds ample copper");
+        frames(null,3600);
+        check(brain.core().items.get(Items.copper)>0 && brain.emergencyMiningTicks==0,
+            "The resumed native mine and conveyors replenish actual core stock without worker mining");brain.dispose();
     }
 
     static void ratesAndReserves(){

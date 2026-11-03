@@ -72,6 +72,10 @@ public final class RetirementPlanner{
         }
         return canRetire(old,brain.time());
     }
+    boolean protectsReplacement(Building building){
+        return Vars.state.rules.tags.getInt(key("replacement"),-1)==building.pos() &&
+            (Vars.state.rules.tags.getInt(key("old-mine"),-1)>=0 || Vars.state.rules.tags.getInt(key("removing"),-1)>=0);
+    }
 
     boolean plan(float clock){
         int removing=Vars.state.rules.tags.getInt(key("removing"),-1);
@@ -105,11 +109,11 @@ public final class RetirementPlanner{
         if(!brain.development.complete() || brain.development.upgraded()<2 || clock<nextUpgrade) return false;
         nextUpgrade=clock+1800f;
         if(brain.core().items.get(Items.titanium)<50 || brain.core().items.get(Items.silicon)<160 || brain.core().items.get(Items.graphite)<80) return false;
-        //Do not strand another 300-power drill beyond this stage's supported generation ceiling.
-        if(brain.economy.powerDemand+Blocks.laserDrill.consPower.usage*60f*1.08f>12f*60f){
+        //Additional powered mining must fit the supported generation expansion budget.
+        if(brain.economy.powerDemand+Blocks.laserDrill.consPower.usage*60f*1.08f>12f*60f+brain.utilities.commissioned()*((mindustry.world.blocks.power.PowerGenerator)Blocks.steamGenerator).powerProduction*60f){
             phase="当前煤电方案已到扩展预算，保留现有矿业；后续需要液体与蒸汽供电适配"; return false;
         }
-        if(brain.view.ore(Items.thorium,brain.actor.unit())!=null && !brain.hasProduction(Items.thorium)){
+        if(brain.view.deposit(Items.thorium,brain.core())!=null && !brain.hasProduction(Items.thorium)){
             phase="建立激光采钍及真实回库、电力配套";
             return brain.buildDrill(Items.thorium,null);
         }
@@ -121,7 +125,7 @@ public final class RetirementPlanner{
         Seq<Building> mines=brain.view.buildings.copy();
         mines.sort(b -> b instanceof DrillBuild && ((DrillBuild)b).dominantItem==Items.titanium ? 0 : 1);
         for(Building old:mines){
-            if(!(old instanceof DrillBuild) || old.block!=Blocks.pneumaticDrill || brain.defense.assigned(old) ||
+            if(!(old instanceof DrillBuild) || old.block!=Blocks.pneumaticDrill || brain.defense.assigned(old) || brain.processes.assigned(old) ||
                 !brain.construction.feeds(old,brain.core())) continue;
             Item item=((DrillBuild)old).dominantItem;
             if(item==null || RawLogistics.processingInput(item)) continue;

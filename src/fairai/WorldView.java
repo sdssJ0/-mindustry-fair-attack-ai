@@ -17,12 +17,15 @@ public final class WorldView{
     private final Bits visible = new Bits();
     private final ObjectMap<Item, Tile> oreCache = new ObjectMap<>();
     private final ObjectSet<Item> searchedOre = new ObjectSet<>();
+    private final ObjectMap<Item,Tile> depositCache=new ObjectMap<>();
+    private final ObjectSet<Item> searchedDeposits=new ObjectSet<>();
 
     public WorldView(Team team){ this.team = team; }
 
     public void refresh(){
         oreCache.clear();
         searchedOre.clear();
+        depositCache.clear();searchedDeposits.clear();
         buildings.clear();
         visible.clear();
         //Groups.build omits sleeping/static buildings, including power nodes and walls.
@@ -80,6 +83,18 @@ public final class WorldView{
         }
         searchedOre.add(item);
         if(best != null) oreCache.put(item, best);
+        return best;
+    }
+    /** Drill prospecting depends on discovered terrain, not on the core ship's hand-mining tier. */
+    public Tile deposit(Item item,arc.math.geom.Position from){
+        if(searchedDeposits.contains(item))return depositCache.get(item);
+        searchedDeposits.add(item);
+        Tile best=null;float score=Float.MAX_VALUE;
+        for(Tile t:Vars.world.tiles) if(known(t.x,t.y) && t.drop()==item){
+            float next=arc.math.Mathf.dst2(from.getX(),from.getY(),t.worldx(),t.worldy())+danger(t.worldx(),t.worldy())*10000f;
+            if(next<score){score=next;best=t;}
+        }
+        if(best!=null)depositCache.put(item,best);
         return best;
     }
 

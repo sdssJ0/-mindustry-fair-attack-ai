@@ -31,6 +31,16 @@ public final class EconomyBenchmark{
     public static void main(String[] args){
         try{
             SimulationTest.setup();
+            if(Boolean.getBoolean("fairai.profile")){
+                Thread main=Thread.currentThread();
+                Thread sampler=new Thread(()->{
+                    while(true)try{
+                        Thread.sleep(10000);
+                        System.out.println("PROFILE tick="+(running==null ? -1:running.tick));
+                        for(StackTraceElement frame:main.getStackTrace())System.out.println(" AT "+frame);
+                    }catch(InterruptedException stop){return;}
+                },"fair-ai-benchmark-sampler");sampler.setDaemon(true);sampler.start();
+            }
             Events.on(EventType.UnitCreateEvent.class, e -> {
                 if(running != null && e.unit.team == Team.crux && e.spawner != null){
                     running.created.merge(e.unit.type.name, 1L, Long::sum);
@@ -68,8 +78,8 @@ public final class EconomyBenchmark{
     static void run(String scenario, int seed, int minutes, Fi output, BlueprintLibrary library){
         int kind = scenario.startsWith("choke") ? 1 : scenario.startsWith("lake") ? 2 : 0;
         SimulationTest.map(kind);
-        if(scenario.startsWith("rich") || scenario.startsWith("late")) enrich();
-        if(scenario.startsWith("late")) for(int x=96;x<104;x++) for(int y=20;y<28;y++){
+        if(scenario.startsWith("rich") || scenario.contains("late")) enrich();
+        if(scenario.contains("late")) for(int x=96;x<104;x++) for(int y=20;y<28;y++){
             Vars.world.tile(x,y).setOverlay(Blocks.oreThorium);
             Vars.world.tile(111-x,y).setOverlay(Blocks.oreThorium);
         }
@@ -104,8 +114,10 @@ public final class EconomyBenchmark{
             }
             if((tick + 1) % (300 * 60) == 0){
                 audit.snapshot();
+                SaveIO.write(output.child(scenario+"-seed-"+seed+"-checkpoint.msav"));
                 System.out.println("PROGRESS " + scenario + " seed=" + seed + " t=" + (tick + 1) / 60 +
-                    "s projects=" + brain.finishedProjects + " factories=" + audit.currentFactories() + " units=" + audit.created);
+                    "s projects=" + brain.finishedProjects + " factories=" + audit.currentFactories() + " units=" + audit.created+
+                    " steam="+brain.utilities.commissioned()+"/"+brain.utilities.count()+" t2="+brain.development.upgraded()+" t3="+brain.development.t3Upgraded()+" stock="+brain.core().items+" stage="+brain.development.phase+" utility="+brain.utilities.phase);
             }
             if(brain.core() == null || opponent != null && opponent.core() == null) break;
         }
@@ -234,6 +246,11 @@ public final class EconomyBenchmark{
             for(Building b : Team.crux.data().buildings) if(b instanceof GenericCrafterBuild || b instanceof UnitFactoryBuild) result.merge(b.block.name, 1L, Long::sum);
             return result;
         }
+        java.util.Map<String,Long> activeUnits(){
+            java.util.Map<String,Long> result=new TreeMap<>();
+            for(Unit unit:Groups.unit)if(unit.team==Team.crux && !unit.spawnedByCore && !unit.dead)result.merge(unit.type.name,1L,Long::sum);
+            return result;
+        }
         java.util.Map<String, Object> stock(){
             java.util.Map<String, Object> result = new TreeMap<>();
             if(brain.core() != null) for(Item item : Vars.content.items()) if(brain.core().items.get(item) > 0) result.put(item.name, brain.core().items.get(item));
@@ -248,9 +265,9 @@ public final class EconomyBenchmark{
         }
         void snapshot(){
             timeline.add(obj("seconds", (tick + 1) / 60.0, "stock", stock(), "factories", currentFactories(), "allBuildings", counts(),
-                "manufacturedUnits", new TreeMap<>(created), "power", power(), "projects", brain.finishedProjects, "status", brain.status,
+                "manufacturedUnits", new TreeMap<>(created),"activeUnits",activeUnits(), "power", power(), "projects", brain.finishedProjects, "status", brain.status,
                 "coalInCore", previousCoal, "sandInCore", previousSand, "productionTotals", productionTotals(), "economy", brain.economy.describe(),
-                "development",brain.development.describe(),"retirement",brain.retirement.describe()));
+                "development",brain.development.describe(),"retirement",brain.retirement.describe(),"utilities",brain.utilities.describe(),"t3",brain.development.t3Upgraded()));
         }
         Object productionTotals(){
             java.util.Map<String, java.util.Map<String,Object>> result = new TreeMap<>();
@@ -297,10 +314,11 @@ public final class EconomyBenchmark{
             return obj("scenario",scenario,"seed",seed,"plannedMinutes",limit/3600,"actualSeconds",(tick+1)/60.0,"wallSeconds",wallSeconds,
                 "emergencyMiningSeconds",brain.emergencyMiningTicks/60f,"defenses",defenses,
                 "completedT2Upgrades",brain.development.upgraded(),"development",brain.development.describe(),
+                "completedT3Upgrades",brain.development.t3Upgraded(),"utilityStations",brain.utilities.count(),"commissionedSteam",brain.utilities.commissioned(),"utilities",brain.utilities.describe(),
                 "retiredFacilities",brain.retirement.retired,"retirement",brain.retirement.describe(),
                 "lateWindowSeconds",600,"firstBuiltSeconds",discovered,"lastNewTypeSeconds",lastNewType/60.0,"lastCompletedProjectSeconds",lastConstruction/60.0,
                 "currentBuildings",counts(),"currentFactories",currentFactories(),"coreStock",stock(),"machines",aggregate,"machineInstances",detail,
-                "unitCapPerType",Units.getCap(Team.crux),"manufacturedUnits",created,"simulatedAttritionKills",simulatedLosses,
+                "unitCapPerType",Units.getCap(Team.crux),"manufacturedUnits",created,"activeUnits",activeUnits(),"simulatedAttritionKills",simulatedLosses,
                 "coreAlive",brain.core()!=null,"opponentCoreAlive",Team.sharded.core()!=null,"power",power(),
                 "rawPositiveCoreInflow",rawPositiveInflow,"withdrawalTrips",withdrawals,"depositTrips",deposits,
                 "withdrawnItems",withdrawn,"withdrawnFromCore",withdrawnCore,"depositedToCore",depositedCore,

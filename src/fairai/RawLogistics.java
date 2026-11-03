@@ -14,6 +14,8 @@ import mindustry.world.blocks.storage.CoreBlock.CoreBuild;
 /** Coal and sand belong at processing/fuel consumers, never in the core's stock goals. */
 public final class RawLogistics{
     private final TeamBrain brain;
+    private final LongMap<Float> retryAfter=new LongMap<>();
+    private int lastProject=-1;
     RawLogistics(TeamBrain brain){ this.brain = brain; }
 
     public static boolean processingInput(Item item){ return item == Items.coal || item == Items.sand; }
@@ -77,6 +79,7 @@ public final class RawLogistics{
     }
 
     boolean plan(){
+        if(lastProject!=brain.finishedProjects){retryAfter.clear();lastProject=brain.finishedProjects;}
         for(Building target : brain.view.buildings){
             if(!brain.economy.manages(target)) continue;
             for(Item item : brain.inputs(target.block, target)){
@@ -90,17 +93,38 @@ public final class RawLogistics{
                     connected += brain.economy.drillRate((DrillBuild)b) / Math.max(1, sharing);
                 }
                 if(connected >= needed * 0.9f) continue;
-                Building source = brain.view.buildings.min(b -> b instanceof DrillBuild && ((DrillBuild)b).dominantItem == item &&
-                    !brain.construction.feeds(b, target) && !assignedElsewhere(b, target, item), b -> b.dst2(target));
-                if(source != null){
-                    Seq<BuildPlan> route = brain.construction.supplyRoute(source, target);
+                long key=((long)target.pos()<<16)|(item.id&0xffff);
+                Float retry=retryAfter.get(key);if(retry!=null && brain.time()<retry)continue;
+                Seq<Building> sources=brain.view.buildings.select(b -> b instanceof DrillBuild && ((DrillBuild)b).dominantItem == item &&
+                    !brain.construction.feeds(b,target) && (!assignedElsewhere(b,target,item) || spareCapacity(b,target,item,needed)));
+                sources.sort(b->b.dst2(target));
+                for(Building source:sources){
+                    Seq<BuildPlan> route = brain.construction.branchRoute(source, target);
                     if(route != null && route.any() && brain.submit(route, "直送 " + item.localizedName + " → " + target.block.localizedName)){
                         brain.construction.recordFlow(route, item); return true;
                     }
-                }else if(brain.buildDrill(item, target)) return true;
+                }
+                //An unreachable spare source is not usable capacity for this consumer.
+                if(brain.buildDrill(item, target)) return true;
+                retryAfter.put(key,brain.time()+600f);
             }
         }
         return false;
+    }
+
+    private boolean spareCapacity(Building source,Building target,Item item,float needed){
+        //Private utility/ammunition mines and unsupported existing recipes retain exclusive allocation.
+        if(brain.defense.assigned(source) || WorldMarks.getInt("fair-ai.utility-mine."+brain.team.id+"."+source.pos(),-1)>=0)return false;
+        float allocated=0;
+        for(Building other:brain.view.buildings)if(other!=target && brain.inputs(other.block,other).contains(item,true) && brain.construction.feeds(source,other)){
+            if(!brain.economy.manages(other))return false;
+            Item product=brain.construction.outputItem(other);
+            if(!other.enabled && product!=null && brain.core().items.get(product)>=brain.economy.stockGoal(product))continue;
+            float total=0;
+            for(Building mine:brain.view.buildings)if(mine instanceof DrillBuild && ((DrillBuild)mine).dominantItem==item && brain.construction.feeds(mine,other))total+=brain.economy.drillRate((DrillBuild)mine);
+            allocated+=brain.economy.inputRate(other,item)*brain.economy.drillRate((DrillBuild)source)/Math.max(0.001f,total);
+        }
+        return brain.economy.drillRate((DrillBuild)source)>=(allocated+needed)*1.12f;
     }
 
     private boolean assignedElsewhere(Building source, Building target, Item item){

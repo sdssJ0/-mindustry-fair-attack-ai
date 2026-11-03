@@ -1,0 +1,215 @@
+{
+  "version": "0.5.1",
+  "jarSha256": "36868b4a31d57fb0c1f9f7bb2e70f94f49745aa345422b3b37b9df335952c723",
+  "engineChecks": 296,
+  "sourceSha256": {
+    "src/fairai/BlueprintLibrary.java": "7f232482ac2a5df4c05e460b0f0c8673c68d3c5d4fe8fbf5455c215ca29b835f",
+    "src/fairai/BotPlayer.java": "245c55fdb925d86e4d84f3c4da1d63ebec210ff7a9f6dd1965bf566c82881b41",
+    "src/fairai/Construction.java": "7db81c0c802334aa730d67bd9118f649dbe95e1c58f326996831854b4fca33e4",
+    "src/fairai/DefenseLogistics.java": "502a6813196102ab53bb9ce7a9e561f592ccaf3e31275742a91ca4dff3a1ae24",
+    "src/fairai/DevelopmentPlanner.java": "a996272cb35cf41914c10ab130db5339787c0a0b17b7d6484c3e230094336e10",
+    "src/fairai/EconomyMonitor.java": "740dcf82b20b764236318ef8b2f1cdfb9f3f7f8e9a2680485a810419629e7f25",
+    "src/fairai/EconomyPlanner.java": "98c2baad963c86e974e83f63514809c768995f9fd975cb76ade95497090c1138",
+    "src/fairai/FairAiMod.java": "706eab544302877bb6a81b6489b27d3ec386c1ba448ae8520b81f004c06a6975",
+    "src/fairai/LiquidLogistics.java": "8da85cc85108c1425fb197b3718efb9826e1ab50d604999c09cd9be27a518907",
+    "src/fairai/PowerRoutes.java": "a1f7343bdb12238e45141fa8593248d7172cb8e2a99f79fa4a93edba10f2f99b",
+    "src/fairai/ProcessLogistics.java": "ff109ab1c9b20eaf4c4664a6c80b798bf499985cfe8d0ee7fd9510427a3e1681",
+    "src/fairai/ProductionLedger.java": "4e585810448bfd50e7476c8d579728408458dca4f654fa681b272aa057d95b06",
+    "src/fairai/RawLogistics.java": "23235ad6ebe0bec408ca944575bdf9f8441d585c54fc9ae05dda9bd573f7df7d",
+    "src/fairai/RecipeCatalog.java": "15955a94e6faafe816c84ffbe9355252d8411d7e58adede7a3bce8b2af1b217b",
+    "src/fairai/RetirementPlanner.java": "ed730cabb5dedeafe263b6cabab5cc676b3f62e0f8e3b72457b6aadb2d3c458d",
+    "src/fairai/TeamBrain.java": "2040bd5335d3c84367f838e9d937e027c68aa6e47ca848c683916dbbc7089e79",
+    "src/fairai/UtilitiesPlanner.java": "fbb1d3f9ee9cbcb34fca5fffecde416c10357143be35efe8ec823637cb4e08ed",
+    "src/fairai/WorldMarks.java": "d87030cf2fd863630ee972089a10ab5999c3f68cc0bdfa249bbfa19fb4f66b8a",
+    "src/fairai/WorldView.java": "f4d0eaf1179ea5ffdd83d818e0fa5d5a6162e37cb332f62969d863b668109739"
+  },
+  "sourceHashPolicy": "CRLF normalized to LF; compiled Java classes match simulation byte-for-byte.",
+  "results": [
+    {
+      "scenario": "late",
+      "seconds": 5400.0,
+      "evidenceBundle": 1,
+      "t2": 17,
+      "t3": 9,
+      "steam": 1,
+      "commissioned": 1,
+      "retired": 8,
+      "units": {
+        "dagger": 19,
+        "flare": 3,
+        "fortress": 9,
+        "mace": 17
+      },
+      "activeUnits": {
+        "dagger": 1,
+        "flare": 3,
+        "fortress": 8,
+        "mace": 7
+      },
+      "stock": {
+        "copper": 746,
+        "graphite": 118,
+        "lead": 4000,
+        "metaglass": 93,
+        "silicon": 408,
+        "thorium": 111
+      },
+      "utilities": "公用设施：水与蒸汽供电已投产：1 组；水耗 6.0/秒/台，已验收 1 组。"
+    },
+    {
+      "scenario": "late-attrition",
+      "seconds": 3600.0,
+      "evidenceBundle": 0,
+      "t2": 14,
+      "t3": 4,
+      "steam": 1,
+      "commissioned": 1,
+      "retired": 5,
+      "units": {
+        "dagger": 16,
+        "flare": 3,
+        "fortress": 4,
+        "mace": 14
+      },
+      "activeUnits": {},
+      "stock": {
+        "copper": 427,
+        "graphite": 181,
+        "lead": 2431,
+        "metaglass": 166,
+        "silicon": 430,
+        "thorium": 111
+      },
+      "utilities": "公用设施：水与蒸汽供电已投产：1 组；水耗 6.0/秒/台，已验收 1 组。"
+    },
+    {
+      "scenario": "choke-late",
+      "seconds": 3600.0,
+      "evidenceBundle": 0,
+      "t2": 14,
+      "t3": 6,
+      "steam": 1,
+      "commissioned": 1,
+      "retired": 10,
+      "units": {
+        "dagger": 17,
+        "flare": 2,
+        "fortress": 6,
+        "mace": 14
+      },
+      "activeUnits": {
+        "dagger": 2,
+        "flare": 2,
+        "fortress": 6,
+        "mace": 6
+      },
+      "stock": {
+        "copper": 1176,
+        "graphite": 191,
+        "lead": 1572,
+        "metaglass": 171,
+        "silicon": 423,
+        "thorium": 116
+      },
+      "utilities": "公用设施：水与蒸汽供电已投产：1 组；水耗 6.0/秒/台，已验收 1 组。"
+    },
+    {
+      "scenario": "lake-late",
+      "seconds": 3600.0,
+      "evidenceBundle": 0,
+      "t2": 14,
+      "t3": 6,
+      "steam": 1,
+      "commissioned": 1,
+      "retired": 7,
+      "units": {
+        "dagger": 16,
+        "flare": 3,
+        "fortress": 6,
+        "mace": 14
+      },
+      "activeUnits": {
+        "dagger": 1,
+        "flare": 3,
+        "fortress": 6,
+        "mace": 7
+      },
+      "stock": {
+        "copper": 1179,
+        "graphite": 165,
+        "lead": 4000,
+        "metaglass": 141,
+        "silicon": 406,
+        "thorium": 111
+      },
+      "utilities": "公用设施：水与蒸汽供电已投产：1 组；水耗 6.0/秒/台，已验收 1 组。"
+    },
+    {
+      "scenario": "flat",
+      "seconds": 3600.0,
+      "evidenceBundle": 0,
+      "t2": 9,
+      "t3": 0,
+      "steam": 1,
+      "commissioned": 1,
+      "retired": 4,
+      "units": {
+        "dagger": 12,
+        "flare": 2,
+        "mace": 9
+      },
+      "activeUnits": {
+        "dagger": 2,
+        "flare": 2,
+        "mace": 8
+      },
+      "stock": {
+        "copper": 2245,
+        "graphite": 161,
+        "lead": 3759,
+        "metaglass": 164,
+        "silicon": 363,
+        "titanium": 42
+      },
+      "utilities": "公用设施：水与蒸汽供电已投产：1 组；水耗 6.0/秒/台，已验收 1 组。"
+    }
+  ],
+  "engineRuntime": {
+    "runtime": "D:\\MCLDownload\\ext\\jre-v64-220420\\jdk17\\bin\\java.exe",
+    "runtimeVersion": "openjdk version \"17.0.2\" 2022-01-18\nOpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\n",
+    "gameJarSha256": "fb3c1d4038dbcdedd268ad654c466023e636027cf80d7f4f452a1cfac7bb11b8",
+    "exitCode": 0
+  },
+  "simulationRuntime": {
+    "executable": "D:\\MCLDownload\\ext\\jre-v64-220420\\jdk17\\bin\\java.exe",
+    "version": "openjdk version \"17.0.2\" 2022-01-18\nOpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\n",
+    "scenarioIsolation": "Separate JVM and data directory per scenario"
+  },
+  "runSummary": "五个场景：4 场 60 分钟、1 场 90 分钟",
+  "simulationBundles": [
+    {
+      "name": "v0.5.1-early-mining",
+      "minutes": 60,
+      "scenarios": [
+        "late",
+        "late-attrition",
+        "choke-late",
+        "lake-late",
+        "flat"
+      ]
+    },
+    {
+      "name": "v0.5.1-late-90",
+      "minutes": 90,
+      "scenarios": [
+        "late"
+      ]
+    }
+  ],
+  "mapsSha256": {
+    "fair-ai-0.msav": "09e5836797f3d7d354e27e4e4bccca05fa37519e06aa01876cf51ef853bcf59a",
+    "fair-ai-1.msav": "a8610d758e8387efc64c66ae46a4f60324a2767de0afb81de1c5de5954c5c0f0",
+    "fair-ai-2.msav": "f90005764fb5f94e06186bdf079404e0948a093d42ac621b4185ddd6b2639594",
+    "fair-ai-industry.msav": "173e645e8c132b79542c84ff76d099986c340c8e62d4bf5be5940e73c3e75186"
+  }
+}

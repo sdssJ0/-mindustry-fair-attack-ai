@@ -26,7 +26,7 @@ public final class RecipeCatalog{
 
     public static boolean supported(Reconstructor block){
         //A complete liquid adapter is required before permitting the later tiers.
-        return block == Blocks.additiveReconstructor;
+        return block == Blocks.additiveReconstructor || block == Blocks.multiplicativeReconstructor;
     }
 
     public static ObjectFloatMap<Item> t2Demand(){
@@ -35,5 +35,10 @@ public final class RecipeCatalog{
         UnitFactory f = (UnitFactory)Blocks.groundFactory;
         for(ItemStack stack : f.plans.find(p -> p.unit == UnitTypes.dagger).requirements) result.increment(stack.item, 0, stack.amount);
         return result; //One upgraded unit per minute, including its actual T1 input recipe.
+    }
+    public static ObjectFloatMap<Item> t3Demand(){
+        ObjectFloatMap<Item> result=t2Demand();
+        for(ItemStack stack:batch(Blocks.multiplicativeReconstructor))result.increment(stack.item,0,stack.amount);
+        return result;
     }
 }

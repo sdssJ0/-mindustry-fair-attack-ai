@@ -17,6 +17,23 @@ final class RawLogisticsTest{
         directProcessingRoutes();
         recoverCarriedInputs();
         migrateOldCoreRoute();
+        shareSpareSand();
+    }
+
+    static void shareSpareSand(){
+        TeamBrain brain=fixture();UtilitiesTest.stock();
+        brain.core().items.set(Items.metaglass,0);brain.development.armed=true;
+        Vars.world.tile(100,36).setBlock(Blocks.pneumaticDrill,Team.crux);
+        Vars.world.tile(102,36).setBlock(Blocks.kiln,Team.crux);
+        Vars.world.tile(98,41).setBlock(Blocks.kiln,Team.crux);
+        frames(null,120);brain.view.refresh();brain.economy.refresh(0);
+        check(brain.construction.feeds(Vars.world.build(100,36),Vars.world.build(102,36)),"The existing sand mine already supplies the first supported kiln");
+        check(brain.raw.plan() && !brain.project.contains(p->p.block instanceof Drill),
+            "A second consumer shares sufficient calculated spare sand throughput through a paid branch instead of demanding another mine");
+        for(int i=0;i<10000 && brain.project.any();i++)frame(brain);
+        frames(null,4800);
+        check(Vars.world.build(98,41).items.get(Items.sand)>0 && brain.core().items.get(Items.sand)==0 && brain.supplyLog.isEmpty(),
+            "Real sand reaches the second consumer automatically while preserving the original consumer and avoiding core deliveries");brain.dispose();
     }
 
     static TeamBrain fixture(){
