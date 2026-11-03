@@ -41,7 +41,7 @@ public final class EconomyPlanner{
 
     public int stockGoal(Item item){
         int base = item == Items.graphite ? 80 : item == Items.silicon ? 160 : item == Items.copper ? 180 : item == Items.lead ? 160 : 30;
-        return Math.max(base, brain.requested(item));
+        return Math.max(Math.max(base, brain.requested(item)),brain.development.stockGoal(item));
     }
 
     public int reserve(Item item){
@@ -50,7 +50,7 @@ public final class EconomyPlanner{
         if(brain.view.count(Blocks.groundFactory) == 0){
             for(ItemStack cost : Blocks.groundFactory.requirements) if(cost.item == item) base = Math.max(base, cost.amount + 20);
         }
-        return base;
+        return Math.max(base,brain.development.reserve(item));
     }
 
     public void refresh(float clock){
@@ -62,6 +62,7 @@ public final class EconomyPlanner{
             if(b instanceof DrillBuild){
                 DrillBuild d = (DrillBuild)b;
                 if(d.dominantItem != null) supply.increment(d.dominantItem, 0, drillRate(d));
+                if(b.block.consPower != null) powerDemand += b.block.consPower.usage*60f;
             }
             if(b.block instanceof PowerGenerator){
                 powerSupply += ((PowerGenerator)b.block).powerProduction * 60f;
@@ -87,6 +88,8 @@ public final class EconomyPlanner{
         if(needSilicon) wanted.put(Items.silicon, Math.max(60f, maxSilicon + 20f));
         int graphiteShort = stockGoal(Items.graphite) - brain.core().items.get(Items.graphite);
         if(graphiteShort > 0) wanted.put(Items.graphite, Math.min(40f, Math.max(8f, graphiteShort / 2f)));
+        for(Item item : new Item[]{Items.graphite,Items.silicon}) wanted.increment(item,0,brain.development.demand(item));
+        powerDemand += brain.development.powerDemand();
         for(Item item : new Item[]{Items.graphite, Items.metaglass}){
             float ammo = brain.defense.productionDemand(item);
             if(ammo > 0) wanted.increment(item, 0, ammo);
@@ -156,7 +159,7 @@ public final class EconomyPlanner{
                 if(brain.buildDrill(item, rawTarget(item))) return true;
             }
         }
-        if(powerSupply + 0.01f < powerDemand && brain.view.count(Blocks.combustionGenerator) < 6){
+        if(powerSupply + 0.01f < powerDemand && brain.view.count(Blocks.combustionGenerator) < (brain.development.armed ? 12 : 6)){
             if(brain.build(Blocks.combustionGenerator, false)) return true;
         }
         //Economy first includes upgrading existing local raw mining before mobilizing.
@@ -230,13 +233,14 @@ public final class EconomyPlanner{
             UnitFactoryBuild f = (UnitFactoryBuild)b;
             if(f.currentPlan >= 0 && Units.canCreate(brain.team, ((UnitFactory)b.block).plans.get(f.currentPlan).unit)) candidates.add(f);
         }
-        if(ready && candidates.any()) military.add(candidates.get((int)(clock / 3600f) % candidates.size));
+        if(ready && candidates.any() && (!brain.development.armed || brain.development.blocked)) military.add(candidates.get((int)(clock / 3600f) % candidates.size));
         phase = !complete ? "经济优先：完善基础产业与造兵设施" : !upgraded ? "经济优先：升级原料矿业" :
             !supplyReady ? "经济优先：补足原料或电力吞吐" : !bankReady ? "经济优先：积累建设储备" :
             brain.project.any() ? "经济优先：为当前施工保留资源" : candidates.isEmpty() ? "部队已达当前上限，保留发展储备" : "经济就绪：轮换集中造兵";
         ObjectSet<Block> scheduled = new ObjectSet<>();
         for(Building b : brain.view.buildings){
             if(!manages(b)) continue;
+            if(brain.development.owns(b)) continue;
             if(b instanceof UnitFactoryBuild){ b.control(LAccess.enabled, military.contains(b) ? 1 : 0, 0, 0, 0); continue; }
             if(!(b.block instanceof GenericCrafter)) continue;
             GenericCrafter c = (GenericCrafter)b.block;

@@ -25,6 +25,11 @@ final class RawLogisticsTest{
         Team.crux.core().items.set(Items.copper, 600);
         Team.crux.core().items.set(Items.lead, 300);
         TeamBrain brain = new TeamBrain(Team.crux);
+        //These isolated routing fixtures place factories by hand in the future military area.
+        //Campus reservation itself is covered independently by DevelopmentTest.
+        Seq<String> reservations=new Seq<>();
+        WorldMarks.each((key,value)->{ if(key.startsWith("fair-ai.reserve.") || key.startsWith("fair-ai.campus-flow.")) reservations.add(key); });
+        for(String key:reservations) WorldMarks.remove(key);
         frames(null, 120);
         return brain;
     }
@@ -84,8 +89,8 @@ final class RawLogisticsTest{
         finish(brain);
         check(brain.actor.unit().stack.amount == 10 && brain.core().items.get(Items.sand) == 0,
             "Carried sand with no consumer is retained while construction can still proceed");
-        Vars.world.tile(94, 44).setBlock(Blocks.siliconSmelter, Team.crux);
-        Building target = Vars.world.build(94, 44);
+        Vars.world.tile(94, 50).setBlock(Blocks.siliconSmelter, Team.crux);
+        Building target = Vars.world.build(94, 50);
         brain.view.refresh();
         brain.project.add(new BuildPlan(93, 48, 0, Blocks.copperWall));
         for(int i = 0; i < 900 && target.items.get(Items.sand) == 0; i++) frame(brain);

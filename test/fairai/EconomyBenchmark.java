@@ -68,7 +68,11 @@ public final class EconomyBenchmark{
     static void run(String scenario, int seed, int minutes, Fi output, BlueprintLibrary library){
         int kind = scenario.startsWith("choke") ? 1 : scenario.startsWith("lake") ? 2 : 0;
         SimulationTest.map(kind);
-        if(scenario.startsWith("rich")) enrich();
+        if(scenario.startsWith("rich") || scenario.startsWith("late")) enrich();
+        if(scenario.startsWith("late")) for(int x=96;x<104;x++) for(int y=20;y<28;y++){
+            Vars.world.tile(x,y).setOverlay(Blocks.oreThorium);
+            Vars.world.tile(111-x,y).setOverlay(Blocks.oreThorium);
+        }
         new FairAiMod().applyFairRules();
         for(Team team : new Team[]{Team.crux, Team.sharded}){
             team.core().items.set(Items.copper, 250);
@@ -245,7 +249,8 @@ public final class EconomyBenchmark{
         void snapshot(){
             timeline.add(obj("seconds", (tick + 1) / 60.0, "stock", stock(), "factories", currentFactories(), "allBuildings", counts(),
                 "manufacturedUnits", new TreeMap<>(created), "power", power(), "projects", brain.finishedProjects, "status", brain.status,
-                "coalInCore", previousCoal, "sandInCore", previousSand, "productionTotals", productionTotals(), "economy", brain.economy.describe()));
+                "coalInCore", previousCoal, "sandInCore", previousSand, "productionTotals", productionTotals(), "economy", brain.economy.describe(),
+                "development",brain.development.describe(),"retirement",brain.retirement.describe()));
         }
         Object productionTotals(){
             java.util.Map<String, java.util.Map<String,Object>> result = new TreeMap<>();
@@ -291,6 +296,8 @@ public final class EconomyBenchmark{
             }
             return obj("scenario",scenario,"seed",seed,"plannedMinutes",limit/3600,"actualSeconds",(tick+1)/60.0,"wallSeconds",wallSeconds,
                 "emergencyMiningSeconds",brain.emergencyMiningTicks/60f,"defenses",defenses,
+                "completedT2Upgrades",brain.development.upgraded(),"development",brain.development.describe(),
+                "retiredFacilities",brain.retirement.retired,"retirement",brain.retirement.describe(),
                 "lateWindowSeconds",600,"firstBuiltSeconds",discovered,"lastNewTypeSeconds",lastNewType/60.0,"lastCompletedProjectSeconds",lastConstruction/60.0,
                 "currentBuildings",counts(),"currentFactories",currentFactories(),"coreStock",stock(),"machines",aggregate,"machineInstances",detail,
                 "unitCapPerType",Units.getCap(Team.crux),"manufacturedUnits",created,"simulatedAttritionKills",simulatedLosses,

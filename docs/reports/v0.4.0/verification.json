@@ -1,0 +1,125 @@
+{
+  "version": "0.4.0",
+  "jarSha256": "c31b0034bcd0e605cce63a972a01b7040bfa46d794e673964066f66034127763",
+  "engineChecks": 202,
+  "sourceSha256": {
+    "src/fairai/BlueprintLibrary.java": "7f232482ac2a5df4c05e460b0f0c8673c68d3c5d4fe8fbf5455c215ca29b835f",
+    "src/fairai/BotPlayer.java": "245c55fdb925d86e4d84f3c4da1d63ebec210ff7a9f6dd1965bf566c82881b41",
+    "src/fairai/Construction.java": "5a4d463b1e22ec28c37bb63079ffaa797db24f7c6df412005e12a640f899fd00",
+    "src/fairai/DefenseLogistics.java": "502a6813196102ab53bb9ce7a9e561f592ccaf3e31275742a91ca4dff3a1ae24",
+    "src/fairai/DevelopmentPlanner.java": "209116773cc81a011754b6a61671c274b8a01a1b9c10e2a230a341154f3f4146",
+    "src/fairai/EconomyMonitor.java": "8c8063b885c50675601dc7adc06b2a6486525dbddbd87d0a134d3bd3d3750e8e",
+    "src/fairai/EconomyPlanner.java": "b294f9058bf861b00fbc8dfef243bb78344de76e966398cfe0af6fa43fe4b27b",
+    "src/fairai/FairAiMod.java": "706eab544302877bb6a81b6489b27d3ec386c1ba448ae8520b81f004c06a6975",
+    "src/fairai/ProductionLedger.java": "60b11ed4d39138244c1a11ab5bc1cdb8117471d7dc6561e5cd3a80c008eeca5a",
+    "src/fairai/RawLogistics.java": "5a589d3704b074920397ceaad9bfc104386de3035fc5710c7665798d49b2596a",
+    "src/fairai/RecipeCatalog.java": "9613a85b91c6676079bcab4ffbe00fed0697bfa01b209e76018b474a09a0a6ef",
+    "src/fairai/RetirementPlanner.java": "f6e0b7e89a8329a917e3a10a3dc95d79e8fbeb91e72d96ce486f8aca64656b4e",
+    "src/fairai/TeamBrain.java": "77e0d391c6336b51fece6f3a643456a3cd88b74a556acfd529ff4d7fc20fa811",
+    "src/fairai/WorldMarks.java": "d87030cf2fd863630ee972089a10ab5999c3f68cc0bdfa249bbfa19fb4f66b8a",
+    "src/fairai/WorldView.java": "f41a309fea150242edaf94c8232bab071c0dae37920e8e59de422fc77c7fc9ed"
+  },
+  "sourceHashPolicy": "CRLF normalized to LF; original byte hashes retained in the simulation manifest.",
+  "results": [
+    {
+      "scenario": "flat",
+      "seconds": 2400.0,
+      "t2": 9,
+      "retired": 3,
+      "laserDrills": 0,
+      "stock": {
+        "copper": 3170,
+        "graphite": 167,
+        "lead": 2764,
+        "silicon": 367,
+        "titanium": 658
+      },
+      "units": {
+        "dagger": 13,
+        "flare": 1,
+        "mace": 9
+      },
+      "renewal": "设施更新：完成正常拆除；保留替代产能与原版返还；已正常拆除 3 座冗余设施。"
+    },
+    {
+      "scenario": "choke",
+      "seconds": 2400.0,
+      "t2": 9,
+      "retired": 3,
+      "laserDrills": 3,
+      "stock": {
+        "copper": 3528,
+        "graphite": 164,
+        "lead": 2727,
+        "silicon": 364,
+        "titanium": 994
+      },
+      "units": {
+        "dagger": 11,
+        "flare": 3,
+        "mace": 9
+      },
+      "renewal": "设施更新：等待已建激光矿机的供电、回库与真实产出，旧线继续保留；已正常拆除 3 座冗余设施。"
+    },
+    {
+      "scenario": "lake",
+      "seconds": 2400.0,
+      "t2": 9,
+      "retired": 2,
+      "laserDrills": 0,
+      "stock": {
+        "copper": 2881,
+        "graphite": 166,
+        "lead": 2676,
+        "silicon": 370,
+        "titanium": 613
+      },
+      "units": {
+        "dagger": 13,
+        "flare": 1,
+        "mace": 9
+      },
+      "renewal": "设施更新：完成正常拆除；保留替代产能与原版返还；已正常拆除 2 座冗余设施。"
+    },
+    {
+      "scenario": "late",
+      "seconds": 2400.0,
+      "t2": 9,
+      "retired": 5,
+      "laserDrills": 3,
+      "stock": {
+        "copper": 4000,
+        "graphite": 170,
+        "lead": 2264,
+        "silicon": 383,
+        "titanium": 1235
+      },
+      "units": {
+        "dagger": 11,
+        "flare": 3,
+        "mace": 9
+      },
+      "renewal": "设施更新：完成正常拆除；保留替代产能与原版返还；已正常拆除 5 座冗余设施。"
+    },
+    {
+      "scenario": "attrition",
+      "seconds": 2400.0,
+      "t2": 28,
+      "retired": 2,
+      "laserDrills": 0,
+      "stock": {
+        "copper": 3005,
+        "graphite": 20,
+        "lead": 2569,
+        "silicon": 122,
+        "titanium": 657
+      },
+      "units": {
+        "dagger": 32,
+        "flare": 2,
+        "mace": 28
+      },
+      "renewal": "设施更新：完成正常拆除；保留替代产能与原版返还；已正常拆除 2 座冗余设施。"
+    }
+  ]
+}

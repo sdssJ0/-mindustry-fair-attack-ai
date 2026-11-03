@@ -31,6 +31,8 @@ public final class TeamBrain{
     public final RawLogistics raw;
     public final EconomyPlanner economy;
     public final DefenseLogistics defense;
+    public final DevelopmentPlanner development;
+    public final RetirementPlanner retirement;
     public final Seq<BuildPlan> project = new Seq<>();
     public String status = "等待核心机体重生";
     public int finishedProjects;
@@ -66,6 +68,8 @@ public final class TeamBrain{
         this.raw = new RawLogistics(this);
         this.economy = new EconomyPlanner(this);
         this.defense = new DefenseLogistics(this);
+        this.development = new DevelopmentPlanner(this);
+        this.retirement = new RetirementPlanner(this);
         actor = new BotPlayer();
         actor.name = "公平 AI · " + team.name;
         actor.team(team);
@@ -78,6 +82,7 @@ public final class TeamBrain{
             actor.unit(restored);
         }
         view.refresh();
+        development.initialize();
     }
 
     public void dispose(){
@@ -85,6 +90,7 @@ public final class TeamBrain{
     }
 
     public CoreBuild core(){ return team.core(); }
+    float time(){ return clock; }
 
     public void update(){
         clock += arc.util.Time.delta;
@@ -94,6 +100,8 @@ public final class TeamBrain{
             return;
         }
         if(clock >= nextVision){ view.refresh(); nextVision = clock + 30f; }
+        development.update(clock);
+        development.control();
         if(actor.dead()) return; //Player.update supplies the same normal deathDelay and core spawn.
         Unit unit = actor.unit();
         actor.set(unit);
@@ -105,6 +113,7 @@ public final class TeamBrain{
             plan();
             economy.refresh(clock);
             economy.control();
+            development.control();
             nextThink = clock + 120f;
         }
         work(unit);
@@ -150,6 +159,8 @@ public final class TeamBrain{
         if(defense.ready() && view.count(Blocks.scatter) < 2 && build(Blocks.scatter, true)) return;
         if(view.count(Blocks.groundFactory) == 0 && build(Blocks.groundFactory, false)) return;
 
+        if(development.plan()) return;
+        if(retirement.plan(clock)) return;
         if(rebuildDestroyed()) return;
         //Factory count follows throughput; an empty core alone is never a reason to clone factories.
         if(view.count(Blocks.siliconSmelter) < economy.machinesWanted(Blocks.siliconSmelter) && build(Blocks.siliconSmelter, false)) return;
@@ -362,7 +373,7 @@ public final class TeamBrain{
                 if(!adjacent) continue;
                 boolean coreMine = construction.feeds(source,core());
                 if(submit(Seq.with(new BuildPlan(x,y,0,turret)),"建设矿机直供炮塔："+turret.localizedName)){
-                    if(coreMine) Vars.state.rules.tags.put("fair-ai.core-mine."+team.id+"."+source.pos(),"true");
+                    if(coreMine) WorldMarks.put("fair-ai.core-mine."+team.id+"."+source.pos(),"true");
                     return true;
                 }
             }
@@ -511,6 +522,18 @@ public final class TeamBrain{
         Seq<BuildPlan> pending = plans.select(p -> !Construction.complete(p));
         if(pending.isEmpty() || !construction.affordable(pending, core())) return false;
         project.addAll(pending);
+        for(BuildPlan plan : pending){
+            String ownedKey = "fair-ai.owned."+team.id+"."+arc.math.geom.Point2.pack(plan.x,plan.y);
+            String retiredKey = "fair-ai.retired."+team.id+"."+arc.math.geom.Point2.pack(plan.x,plan.y);
+            if(plan.breaking){
+                if(plan.tile() != null) WorldMarks.put(retiredKey,plan.tile().block().name);
+            }else{
+                if(plan.tile()!=null && (plan.tile().block()==Blocks.air || plan.block.name.equals(WorldMarks.get(ownedKey)))){
+                    WorldMarks.put(ownedKey,plan.block.name);
+                }
+                WorldMarks.remove(retiredKey);
+            }
+        }
         //A queued optional pickup must not delay the infrastructure that replaces it.
         if(actor.unit().stack.amount == 0){ source = destination = null; cargo = null; }
         mineTile = null;
@@ -601,7 +624,7 @@ public final class TeamBrain{
     private boolean repairMiningReturns(){
         for(Building b : view.buildings){
             if(!(b instanceof Drill.DrillBuild) || defense.assigned(b) &&
-                !"true".equals(Vars.state.rules.tags.get("fair-ai.core-mine."+team.id+"."+b.pos()))) continue;
+                !"true".equals(WorldMarks.get("fair-ai.core-mine."+team.id+"."+b.pos()))) continue;
             Item item = construction.outputItem(b);
             if(item == null || RawLogistics.processingInput(item) || construction.feeds(b, core())) continue;
             //A newly placed ammunition mine must be connected to its turret first.
@@ -667,6 +690,7 @@ public final class TeamBrain{
 
     private boolean rebuildDestroyed(){
         for(Building factory : view.buildings){
+            if(development.owns(factory)) continue;
             if(!(factory.block instanceof UnitFactory) || factory.front() == null || !factory.front().tile.solid()) continue;
             for(int rotation = 0; rotation < 4; rotation++){
                 int step = factory.block.size / 2 + 1;
@@ -687,6 +711,7 @@ public final class TeamBrain{
         }
         for(Teams.BlockPlan old : team.data().plans){
             Block block = Vars.content.block(old.block);
+            if(block != null && block.name.equals(WorldMarks.get("fair-ai.retired."+team.id+"."+arc.math.geom.Point2.pack(old.x,old.y)))) continue;
             if(block == null || block == Blocks.air || failedSites.contains(arc.math.geom.Point2.pack(old.x, old.y))) continue;
             if(construction.place(block, old.x, old.y, old.rotation) && core().items.has(block.requirements, Vars.state.rules.buildCostMultiplier)){
                 return submit(Seq.with(new BuildPlan(old.x, old.y, old.rotation, block, old.config)), "修复被摧毁的建筑");
@@ -748,6 +773,7 @@ public final class TeamBrain{
             int index = (supplyCursor + offset) % view.buildings.size;
             Building b = view.buildings.get(index);
             if(b.items == null || b instanceof CoreBuild) continue;
+            if(development.owns(b)) continue;
             if(b.block instanceof ItemTurret) continue; //Normal ammunition is entirely automated.
             if(!economy.manages(b)) continue;
             if(b instanceof UnitFactoryBuild){
@@ -872,6 +898,7 @@ public final class TeamBrain{
         }
         if(project.any()){
             BuildPlan plan = project.first();
+            if(!retirement.guard(plan)){ cancelProject(plan); status="替代产能失效，已停止拆除"; return; }
             Tile tile = plan.tile();
             if(tile == null || (!plan.breaking && tile.block() != Blocks.air && !(tile.build instanceof ConstructBuild) && !Construction.complete(plan) && !plan.isRotation(team) && !construction.replacement(plan))){
                 cancelProject(plan); return;
@@ -922,6 +949,9 @@ public final class TeamBrain{
     }
 
     private void cancelProject(BuildPlan plan){
+        for(BuildPlan pending : project) if(pending.breaking && pending.tile()!=null && !(pending.tile().build instanceof ConstructBuild)){
+            WorldMarks.remove("fair-ai.retired."+team.id+"."+arc.math.geom.Point2.pack(pending.x,pending.y));
+        }
         failedSites.add(arc.math.geom.Point2.pack(plan.x, plan.y));
         project.clear();
         actor.unit().clearBuilding();
@@ -951,12 +981,13 @@ public final class TeamBrain{
         }
         Teamc target = view.enemies.min(e -> core().dst2(e));
         boolean defend = target != null && core().within(target, 350f);
+        boolean sortie = army.size>=4 || development.armed && army.any();
         for(Unit unit : army){
             FairCommand command = (FairCommand)unit.controller();
-            if(target != null && (defend || army.size >= 4)){
+            if(target != null && (defend || sortie)){
                 if(unit.healthf() < 0.25f) command.commandPosition(new arc.math.geom.Vec2(core().x, core().y));
                 else command.commandTarget(target);
-            }else if(army.size >= 4){
+            }else if(sortie){
                 //No enemy knowledge under fog: scout towards successive sectors.
                 float angle = exploreIndex++ * 137.5f;
                 command.commandPosition(new arc.math.geom.Vec2(

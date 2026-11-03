@@ -23,10 +23,12 @@ public final class Construction{
     public final Team team;
     private final WorldView view;
     private final IntMap<Item> streams = new IntMap<>();
+    private final IntMap<Boolean> collectorCache=new IntMap<>();
+    private long collectorTick=-1;
     public Construction(Team team, WorldView view){
         this.team = team; this.view = view;
         String prefix = "fair-ai.flow." + team.id + ".";
-        Vars.state.rules.tags.each((key, value) -> {
+        WorldMarks.each((key, value) -> {
             if(key.startsWith(prefix)) try{ streams.put(Integer.parseInt(key.substring(prefix.length())), Vars.content.item(Integer.parseInt(value))); }catch(Exception ignored){}
         });
     }
@@ -36,7 +38,7 @@ public final class Construction{
         for(BuildPlan plan : plans) if(plan.block instanceof Conveyor){
             int pos = Point2.pack(plan.x, plan.y);
             streams.put(pos, item);
-            Vars.state.rules.tags.put("fair-ai.flow." + team.id + "." + pos, Integer.toString(item.id));
+            WorldMarks.put("fair-ai.flow." + team.id + "." + pos, Integer.toString(item.id));
         }
     }
 
@@ -61,6 +63,9 @@ public final class Construction{
 
     private boolean safeStream(int x, int y, Item item, Building source, Building target){
         if(item == null) return true;
+        //Different finished products may merge at the final core inlet; it has no downstream recipe.
+        Building inlet=Vars.world.build(x,y);
+        if(target instanceof CoreBuild && !RawLogistics.processingInput(item) && coreCollector(inlet,(CoreBuild)target)) return true;
         for(Point2 dir : Geometry.d4){
             Building neighbor = Vars.world.build(x + dir.x, y + dir.y);
             if(neighbor == null || neighbor.team != team || neighbor == source || neighbor == target) continue;
@@ -81,11 +86,20 @@ public final class Construction{
     }
 
     public boolean place(Block block, int x, int y, int rotation){
+        return place(block, x, y, rotation, false);
+    }
+
+    boolean placeDevelopment(Block block, int x, int y, int rotation){
+        return place(block, x, y, rotation, true);
+    }
+
+    private boolean place(Block block, int x, int y, int rotation, boolean development){
         if(!allowed(block)) return false;
         int offset = -(block.size - 1) / 2;
         for(int dx = 0; dx < block.size; dx++) for(int dy = 0; dy < block.size; dy++){
             Tile tile = Vars.world.tile(x + offset + dx, y + offset + dy);
             if(tile == null || !view.known(tile.x, tile.y) || tile.block() != Blocks.air) return false;
+            if(!development && DevelopmentPlanner.reserved(team, tile.pos())) return false;
             //Keep defense input ports clear of unrelated factories and blueprint tiles.
             //The flow-aware conveyor router uses beltCell instead of this placement path.
             for(Point2 dir : Geometry.d4){
@@ -98,7 +112,7 @@ public final class Construction{
             }
             if(block.solid){
                 for(mindustry.gen.Building existing : view.buildings){
-                    if(!(existing.block instanceof UnitFactory)) continue;
+                    if(!(existing.block instanceof UnitFactory) || development && block instanceof mindustry.world.blocks.units.Reconstructor) continue;
                     for(int step = existing.block.size / 2 + 1; step <= existing.block.size / 2 + 3; step++){
                         int ex = existing.tileX() + Geometry.d4x[existing.rotation] * step;
                         int ey = existing.tileY() + Geometry.d4y[existing.rotation] * step;
@@ -124,6 +138,14 @@ public final class Construction{
                 if(facingMine || stream(belt) != item) return false;
             }
         }
+        if(block instanceof Drill || block instanceof GenericCrafter){
+            Item output=block instanceof Drill ? Vars.world.tile(x,y).drop() :
+                ((GenericCrafter)block).outputItems!=null && ((GenericCrafter)block).outputItems.length==1 ? ((GenericCrafter)block).outputItems[0].item : null;
+            for(Point2 edge:Edges.getEdges(block.size)){
+                Item planned=DevelopmentPlanner.busItem(team,Point2.pack(x+edge.x,y+edge.y));
+                if(planned!=null && planned!=output) return false;
+            }
+        }
         if(block instanceof GenericCrafter){
             ItemStack[] outputs = ((GenericCrafter)block).outputItems;
             if(outputs != null && outputs.length == 1) for(Point2 edge : Edges.getEdges(block.size)){
@@ -137,6 +159,8 @@ public final class Construction{
         if(block instanceof UnitFactory){
             for(int step = block.size / 2 + 1; step <= block.size / 2 + 3; step++){
                 Tile exit = Vars.world.tile(x + Geometry.d4x[rotation] * step, y + Geometry.d4y[rotation] * step);
+                if(exit!=null && !development && DevelopmentPlanner.reserved(team,exit.pos())) return false;
+                if(development && exit!=null && exit.team()==team && exit.block() instanceof mindustry.world.blocks.units.Reconstructor) continue;
                 if(exit == null || !view.known(exit.x, exit.y) || exit.solid() || exit.floor().isLiquid) return false;
             }
         }
@@ -210,43 +234,14 @@ public final class Construction{
             plan.block.canReplace(tile.block()) && Build.validPlace(plan.block, team, plan.x, plan.y, plan.rotation);
     }
 
-    /** BFS from the core edge. Builds belts from sink towards source before placing the drill. */
+    /** Use the same verified core collectors for new mining as for manufactured materials. */
     public Seq<BuildPlan> drillRoute(BuildPlan drill, CoreBuild core){
-        //Processing inputs are never routed to the construction treasury.
-        if(RawLogistics.processingInput(drill.tile().drop())) return null;
-        int width = Vars.world.width(), height = Vars.world.height();
-        int[] parents = new int[width * height];
-        java.util.Arrays.fill(parents, -2);
-        IntQueue queue = new IntQueue();
-        for(Point2 edge : Edges.getEdges(core.block.size)){
-            int x = core.tileX() + edge.x, y = core.tileY() + edge.y;
-            if(!beltCell(x, y, drill) || !safeStream(x, y, drill.tile().drop(), null, core)) continue;
-            int index = x + y * width;
-            parents[index] = -1;
-            queue.addLast(index);
-        }
-        int reached = -1, steps = 0;
-        while(queue.size > 0 && steps++ < 16000){
-            int index = queue.removeFirst(), x = index % width, y = index / width;
-            if(adjacent(drill, x, y)){ reached = index; break; }
-            for(Point2 dir : Geometry.d4){
-                int nx = x + dir.x, ny = y + dir.y, next = nx + ny * width;
-                if(nx < 0 || ny < 0 || nx >= width || ny >= height || parents[next] != -2) continue;
-                if(!beltCell(nx, ny, drill) || !safeStream(nx, ny, drill.tile().drop(), null, core) || core.dst(nx * 8f, ny * 8f) > 8f * 100f) continue;
-                parents[next] = index;
-                queue.addLast(next);
-            }
-        }
-        if(reached < 0) return null;
-        Seq<BuildPlan> route = new Seq<>();
-        for(int cell = reached; cell >= 0; cell = parents[cell]){
-            int x = cell % width, y = cell / width, parent = parents[cell];
-            int tx, ty;
-            if(parent < 0){ tx = core.tileX(); ty = core.tileY(); }
-            else { tx = parent % width; ty = parent / width; }
-            route.add(new BuildPlan(x, y, direction(tx - x, ty - y), Blocks.conveyor));
-        }
-        route.reverse();
+        Item item=drill.tile().drop();
+        if(RawLogistics.processingInput(item)) return null;
+        Building source=proposed(drill.block,drill.x,drill.y);
+        ((DrillBuild)source).dominantItem=item;
+        Seq<BuildPlan> route=supplyRoute(source,core,true);
+        if(route==null) return null;
         route.add(drill);
         return route;
     }
@@ -259,7 +254,7 @@ public final class Construction{
             Building belt = Vars.world.build(source.tileX() + edge.x, source.tileY() + edge.y);
             if(belt == null || belt.front() == source) continue;
             while(belt != null && belt.team == team && belt.block instanceof Conveyor && seen.add(belt.pos())){
-                if(outputItem(source) != null && stream(belt) != null && stream(belt) != outputItem(source)) break;
+                if(!coreCollector(belt,team.core()) && outputItem(source) != null && stream(belt) != null && stream(belt) != outputItem(source)) break;
                 result.add(belt);
                 belt = belt.front();
             }
@@ -269,6 +264,28 @@ public final class Construction{
 
     public boolean feeds(Building source, Building target){
         return source.proximity.contains(target, true) || outputBelts(source).contains(b -> b.front() == target);
+    }
+
+    /** A short collector may carry mixed core materials only when it cannot feed another recipe. */
+    private boolean coreCollector(Building start,CoreBuild core){
+        if(core==null || start==null) return false;
+        if(collectorTick!=Vars.state.updateId){ collectorCache.clear(); collectorTick=Vars.state.updateId; }
+        Boolean cached=collectorCache.get(start.pos());
+        if(cached!=null) return cached;
+        boolean result=traceCoreCollector(start,core);
+        collectorCache.put(start.pos(),result);
+        return result;
+    }
+    private boolean traceCoreCollector(Building start,CoreBuild core){
+        IntSet seen=new IntSet();
+        Building b=start;
+        for(int i=0;i<24 && b!=null && b.team==team && b.block instanceof Conveyor && seen.add(b.pos());i++){
+            if(RawLogistics.processingInput(stream(b))) return false;
+            for(Building other:b.proximity) if(other!=core && other.items!=null && !(other.block instanceof Conveyor)) return false;
+            b=b.front();
+            if(b==core) return true;
+        }
+        return false;
     }
 
     /** Paid route from an existing producer to an existing consumer; reuse only its own output belts. */
@@ -326,6 +343,9 @@ public final class Construction{
         if(feeds(source, target) || source.tile.build != source && target.tile.build != target && touching(source, target)) return new Seq<>();
         IntSet reusable = new IntSet();
         if(source.tile.build == source) for(Building belt : outputBelts(source)) reusable.add(belt.pos());
+        if(target instanceof CoreBuild) for(Building inlet:view.buildings){
+            if(inlet.within(target,192f) && coreCollector(inlet,(CoreBuild)target)) reusable.add(inlet.pos());
+        }
         IntSet shared = new IntSet();
         if(source instanceof DrillBuild){
             for(Building other : view.buildings){
@@ -393,6 +413,7 @@ public final class Construction{
     private boolean beltCell(int x, int y, BuildPlan drill){
         Tile tile = Vars.world.tile(x, y);
         if(tile == null || !view.known(x, y)) return false;
+        if(DevelopmentPlanner.reserved(team, tile.pos())) return false;
         int offset = -(drill.block.size - 1) / 2;
         if(x >= drill.x + offset && y >= drill.y + offset &&
             x < drill.x + offset + drill.block.size && y < drill.y + offset + drill.block.size) return false;

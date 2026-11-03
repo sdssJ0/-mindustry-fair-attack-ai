@@ -2,9 +2,10 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $projectPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $sourcePath = Join-Path $projectPath 'build\fair-attack-ai.jar'
-$proofPath = Join-Path $projectPath 'build\reports\v0.3.1-fix\verification.json'
+$proofPath = Join-Path $projectPath 'build\reports\v0.4.0-development\verification.json'
 $proof = Get-Content -LiteralPath $proofPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $expectedHash = $proof.jarSha256
+if ($proof.version -ne '0.4.0') { throw 'The verification report does not describe the current release.' }
 if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne $expectedHash) {
     throw 'The mod does not match the verified build. Run verification again.'
 }

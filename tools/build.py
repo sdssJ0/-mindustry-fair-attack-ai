@@ -55,16 +55,18 @@ def main():
             if file.is_file():
                 archive.write(file, file.relative_to(ROOT / 'assets').as_posix())
     print('Built:', output)
-    if '--test' in sys.argv or '--automation-test' in sys.argv:
+    if '--test' in sys.argv or '--automation-test' in sys.argv or '--development-test' in sys.argv:
         tests = ROOT / 'build/tests'
         compile_sources(sorted((ROOT / 'test').rglob('*.java')), tests, [classes])
         runtime = GAME / 'jre/bin/java.exe'
         result = subprocess.run([str(runtime), '-Dfile.encoding=UTF-8', '-ea', '-cp',
                                  ';'.join(os.path.relpath(p, ROOT) for p in [GAME_JAR, classes, tests]),
+                                 'fairai.DevelopmentTest' if '--development-test' in sys.argv else
                                  'fairai.AutomationTest' if '--automation-test' in sys.argv else 'fairai.SimulationTest',
                                  *(['processed'] if '--processed-ammo' in sys.argv else [])], cwd=ROOT, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, text=True, encoding='utf-8')
-        (ROOT / ('build/automation-verification.log' if '--automation-test' in sys.argv else 'build/verification.log')).write_text(result.stdout, encoding='utf-8')
+        logname='development-verification.log' if '--development-test' in sys.argv else 'automation-verification.log' if '--automation-test' in sys.argv else 'verification.log'
+        (ROOT / 'build' / logname).write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
         if result.returncode:
             raise SystemExit(result.returncode)

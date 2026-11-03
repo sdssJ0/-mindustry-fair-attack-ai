@@ -29,6 +29,8 @@ def main():
         'modVersion': re.search(r'^version:\s*(\S+)', (build.ROOT/'mod.hjson').read_text(encoding='utf-8'), re.MULTILINE).group(1), 'minutesPerRun': args.minutes, 'scenarios': args.scenarios.split(','),
         'seeds': args.seeds.split(','), 'gameJarSha256': hashlib.sha256(build.GAME_JAR.read_bytes()).hexdigest(),
         'sourceSha256': {p.relative_to(build.ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
+        'sourceCanonicalSha256': {p.relative_to(build.ROOT).as_posix(): hashlib.sha256(p.read_bytes().replace(b'\r\n', b'\n')).hexdigest() for p in sources},
+        'sourceHashPolicy': 'Canonical source hashes normalize CRLF to LF; original byte hashes are also retained.',
         'method': 'Actual v146 Groups.update at fixed 60 ticks per simulated second; AI policy unchanged. Craft cycles detected from real progress rollover, units from UnitCreateEvent. Late window is final 10 planned minutes. No runtime resource grants.',
         'diagnosticScenarios': {'rich-start': 'All items 1000 in each core at setup only; not an autonomous bootstrap result.',
                                 'attrition': 'Manufactured units killed after 120-150 game seconds to separate cap from production limits.',

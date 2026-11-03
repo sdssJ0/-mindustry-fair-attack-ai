@@ -38,6 +38,7 @@ public final class SimulationTest{
             RawLogisticsTest.run();
             EconomyPlanningTest.run();
             AutomationTest.run();
+            DevelopmentTest.run();
             routeAndTransport(0);
             routeAndTransport(1);
             routeAndTransport(2);
@@ -434,6 +435,9 @@ public final class SimulationTest{
                 if(u.team == Team.crux && !u.spawnedByCore && u.type.hasWeapons() && u.dst(brain.core()) > 220f){ attacked = true; }
             }
         }
+        if(!attacked) for(Unit u:Groups.unit) if(u.team==Team.crux && !u.spawnedByCore) System.out.println("Stalled unit "+u.type.name+" at "+u.x/8f+","+u.y/8f+
+            " distance="+u.dst(brain.core())+" controller="+u.controller()+" devel="+brain.development.describe()+
+            (u.controller() instanceof mindustry.ai.types.CommandAI ? " command="+((mindustry.ai.types.CommandAI)u.controller()).targetPos+" attack="+((mindustry.ai.types.CommandAI)u.controller()).attackTarget : ""));
         check(attacked, "Map " + kind + " squad leaves rally and advances on the enemy");
         check(Groups.player.count(p -> p.team() == Team.crux) == 1, "One core builder player per AI team");
         brain.dispose();

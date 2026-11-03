@@ -2,7 +2,7 @@ name: fair-attack-ai
 displayName: 公平 AI 进攻
 author: Local
 description: 赛普罗自定义进攻模式：有限资源、真实施工、地形规划的程序 AI。原型版本，全部科技保持解锁。
-version: 0.3.1
+version: 0.4.0
 minGameVersion: 146
 main: fairai.FairAiMod
 java: true
